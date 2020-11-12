@@ -1,436 +1,421 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2513
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;\f1\fmodern\fcharset0 Courier-Oblique;}
-{\colortbl;\red255\green255\blue255;\red109\green109\blue109;\red32\green32\blue32;\red191\green100\blue38;
-\red153\green168\blue186;\red88\green118\blue71;\red86\green132\blue173;\red117\green114\blue185;\red152\green54\blue29;
-\red254\green187\blue91;\red81\green136\blue67;}
-{\*\expandedcolortbl;;\csgenericrgb\c42745\c42745\c42745;\csgenericrgb\c12549\c12549\c12549;\csgenericrgb\c74902\c39216\c14902;
-\csgenericrgb\c60000\c65882\c72941;\csgenericrgb\c34510\c46275\c27843;\csgenericrgb\c33725\c51765\c67843;\csgenericrgb\c45882\c44706\c72549;\csgenericrgb\c59608\c21176\c11373;
-\csgenericrgb\c99608\c73333\c35686;\csgenericrgb\c31765\c53333\c26275;}
-\margl1440\margr1440\vieww16460\viewh19760\viewkind0
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+# Import libraries
+import os, cv2
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import keras as keras
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+from keras import backend as K
 
-\f0\fs26 \cf2 \cb3 # Import libraries\
-\cf4 import \cf5 os\cf4 , \cf5 cv2\
-\cf4 import \cf5 tensorflow \cf4 as \cf5 tf\
-\cf4 import \cf5 numpy \cf4 as \cf5 np\
-\cf4 import \cf5 matplotlib.pyplot \cf4 as \cf5 plt\
-\cf4 import \cf5 matplotlib.image \cf4 as \cf5 mpimg\
-\cf4 import \cf5 keras \cf4 as \cf5 keras\
-\cf4 from \cf5 sklearn.utils \cf4 import \cf5 shuffle\
-\cf4 from \cf5 sklearn.model_selection \cf4 import \cf5 train_test_split\
-\cf4 from \cf5 keras \cf4 import \cf5 backend \cf4 as \cf5 K\
-\
-K.set_image_data_format(\cf6 'channels_first'\cf5 )\
-\cf4 from \cf5 keras.utils \cf4 import \cf5 np_utils\
-\cf4 from \cf5 keras.models \cf4 import \cf5 Sequential\
-\cf4 from \cf5 keras.layers.core \cf4 import \cf5 Dense\cf4 , \cf5 Dropout\cf4 , \cf5 Activation\cf4 , \cf5 Flatten\
-\cf4 from \cf5 keras.layers.convolutional \cf4 import \cf5 Convolution2D\cf4 , \cf5 MaxPooling2D\
-\cf4 from \cf5 keras.optimizers \cf4 import \cf5 SGD\cf4 , \cf5 RMSprop\cf4 , \cf5 Adam\
-\
-\cf2 # %%\
-\
-\cf5 PATH = os.getcwd()\
-\cf2 # Define data path\
-\cf5 data_path = PATH + \cf6 '/data'\
-\cf5 data_dir_list = os.listdir(data_path)\
-data_dir_list.remove(\cf6 ".DS_Store"\cf5 )\
-\
-img_rows = \cf7 128\
-\cf5 img_cols = \cf7 128\
-\cf5 num_channel = \cf7 1\
-\cf5 num_epoch = \cf7 20\
-\
-\cf2 # Define the number of classes\
-\cf5 num_classes = \cf7 2\
-\
-\cf5 labels_name = \{\cf6 'Back'\cf5 : \cf7 0\cf4 , \cf6 'Front'\cf5 : \cf7 1\cf5 \}\
-\
-img_data_list = []\
-labels_list = []\
-\
-\cf4 for \cf5 dataset \cf4 in \cf5 data_dir_list:\
-    img_list = os.listdir(data_path + \cf6 '/' \cf5 + dataset)\
-    \cf8 print\cf5 (\cf6 'Loading the images of dataset-' \cf5 + \cf6 '\{\}\cf4 \\n\cf6 '\cf5 .format(dataset))\
-    label = labels_name[dataset]\
-    \cf4 for \cf5 img \cf4 in \cf5 img_list:\
-        \cf4 if \cf5 img == \cf6 ".DS_Store"\cf5 :\
-            \cf4 break\
-        else\cf5 :\
-            input_img = mpimg.imread(data_path + \cf6 '/' \cf5 + dataset + \cf6 '/' \cf5 + img)\
-            input_img = cv2.cvtColor(input_img\cf4 , \cf5 cv2.COLOR_BGR2GRAY)\
-            input_img_resize = cv2.resize(input_img\cf4 , \cf5 (\cf7 128\cf4 , \cf7 128\cf5 ))\
-            img_data_list.append(input_img_resize)\
-            labels_list.append(label)\
-\
-img_data = np.array(img_data_list)\
-img_data = img_data.astype(\cf6 'float32'\cf5 )\
-img_data /= \cf7 255\
-\cf8 print\cf5 (img_data.shape)\
-\
-labels = np.array(labels_list)\
-\cf2 # print the count of number of samples for different classes\
-\cf8 print\cf5 (np.unique(labels\cf4 , \cf9 return_counts\cf5 =\cf4 True\cf5 ))\
-\cf2 # convert class labels to on-hot encoding\
-\cf5 Y = np_utils.to_categorical(labels\cf4 , \cf5 num_classes)\
-\
-\cf2 # Shuffle the dataset\
-\cf5 x\cf4 , \cf5 y = shuffle(img_data\cf4 , \cf5 Y\cf4 , \cf9 random_state\cf5 =\cf7 2\cf5 )\
-\cf2 # Split the dataset\
-\cf5 X_train\cf4 , \cf5 X_test\cf4 , \cf5 y_train\cf4 , \cf5 y_test = train_test_split(x\cf4 , \cf5 y\cf4 , \cf9 test_size\cf5 =\cf7 0.2\cf4 , \cf9 random_state\cf5 =\cf7 2\cf5 )\
-\
-\cf4 if \cf5 num_channel == \cf7 1\cf5 :\
-    \cf4 if \cf5 K.image_data_format() == \cf6 'channels_first'\cf5 :\
-        img_data = np.expand_dims(img_data\cf4 , \cf9 axis\cf5 =\cf7 1\cf5 )\
-        \cf8 print\cf5 (img_data.shape)\
-    \cf4 else\cf5 :\
-        img_data = np.expand_dims(img_data\cf4 , \cf9 axis\cf5 =\cf7 4\cf5 )\
-        \cf8 print\cf5 (img_data.shape)\
-\
-\cf4 else\cf5 :\
-    \cf4 if \cf5 K.image_data_format() == \cf6 'channels_first'\cf5 :\
-        img_data = np.rollaxis(img_data\cf4 , \cf7 3\cf4 , \cf7 1\cf5 )\
-        \cf8 print\cf5 (img_data.shape)\
-\
-\cf2 # %%\
-\cf5 USE_SKLEARN_PREPROCESSING = \cf4 False\
-\
-if \cf5 USE_SKLEARN_PREPROCESSING:\
-    \cf2 # using sklearn for preprocessing\
-    \cf4 from \cf5 sklearn \cf4 import \cf5 preprocessing\
-\
-\
-    \cf4 def \cf10 image_to_feature_vector\cf5 (image\cf4 , \cf5 size=(\cf7 128\cf4 , \cf7 128\cf5 )):\
-        \cf2 # resize the image to a fixed size, then flatten the image into\
-        # a list of raw pixel intensities\
-        \cf4 return \cf5 cv2.resize(image\cf4 , \cf5 size).flatten()\
-\
-\
-    img_data_list = []\
-    \cf4 for \cf5 dataset \cf4 in \cf5 data_dir_list:\
-        img_list = os.listdir(data_path + \cf6 '/' \cf5 + dataset)\
-        \cf8 print\cf5 (\cf6 'Loaded the images of dataset-' \cf5 + \cf6 '\{\}\cf4 \\n\cf6 '\cf5 .format(dataset))\
-        \cf4 for \cf5 img \cf4 in \cf5 img_list:\
-            input_img = cv2.imread(data_path + \cf6 '/' \cf5 + dataset + \cf6 '/' \cf5 + img)\
-            input_img = cv2.cvtColor(input_img\cf4 , \cf5 cv2.COLOR_BGR2GRAY)\
-            input_img_flatten = image_to_feature_vector(input_img\cf4 , \cf5 (\cf7 128\cf4 , \cf7 128\cf5 ))\
-            img_data_list.append(input_img_flatten)\
-\
-    img_data = np.array(img_data_list)\
-    img_data = img_data.astype(\cf6 'float32'\cf5 )\
-    \cf8 print\cf5 (img_data.shape)\
-    img_data_scaled = preprocessing.scale(img_data)\
-    \cf8 print\cf5 (img_data_scaled.shape)\
-\
-    \cf8 print\cf5 (np.mean(img_data_scaled))\
-    \cf8 print\cf5 (np.std(img_data_scaled))\
-\
-    \cf8 print\cf5 (img_data_scaled.mean(\cf9 axis\cf5 =\cf7 0\cf5 ))\
-    \cf8 print\cf5 (img_data_scaled.std(\cf9 axis\cf5 =\cf7 0\cf5 ))\
-\
-    \cf4 if \cf5 K.image_data_format() == \cf6 'channels_first'\cf5 :\
-        img_data_scaled = img_data_scaled.reshape(img_data.shape[\cf7 0\cf5 ]\cf4 , \cf5 num_channel\cf4 , \cf5 img_rows\cf4 , \cf5 img_cols)\
-        \cf8 print\cf5 (img_data_scaled.shape)\
-\
-    \cf4 else\cf5 :\
-        img_data_scaled = img_data_scaled.reshape(img_data.shape[\cf7 0\cf5 ]\cf4 , \cf5 img_rows\cf4 , \cf5 img_cols\cf4 , \cf5 num_channel)\
-        \cf8 print\cf5 (img_data_scaled.shape)\
-\
-    \cf4 if \cf5 K.image_data_format() == \cf6 'channels_first'\cf5 :\
-        img_data_scaled = img_data_scaled.reshape(img_data.shape[\cf7 0\cf5 ]\cf4 , \cf5 num_channel\cf4 , \cf5 img_rows\cf4 , \cf5 img_cols)\
-        \cf8 print\cf5 (img_data_scaled.shape)\
-\
-    \cf4 else\cf5 :\
-        img_data_scaled = img_data_scaled.reshape(img_data.shape[\cf7 0\cf5 ]\cf4 , \cf5 img_rows\cf4 , \cf5 img_cols\cf4 , \cf5 num_channel)\
-        \cf8 print\cf5 (img_data_scaled.shape)\
-\
-\cf4 if \cf5 USE_SKLEARN_PREPROCESSING:\
-    img_data = img_data_scaled\
-\
-\cf2 # %%\
-# Defining the model\
-\
-\cf5 input_shape = X_train.shape\
-input_shape = y_train.shape\
-\
-model = Sequential()\
-\
-model.add(Convolution2D(\cf7 32\cf4 , \cf7 3\cf4 , \cf7 3\cf4 , \cf9 padding\cf5 =\cf6 'same'\cf4 , \cf9 input_shape\cf5 =X_train.shape))\
-model.add(Activation(\cf6 'relu'\cf5 ))\
-model.add(Convolution2D(\cf7 32\cf4 , \cf7 3\cf4 , \cf7 3\cf5 ))\
-model.add(Activation(\cf6 'relu'\cf5 ))\
-model.add(MaxPooling2D(\cf9 pool_size\cf5 =(\cf7 2\cf4 , \cf7 2\cf5 )))\
-model.add(Dropout(\cf7 0.5\cf5 ))\
-\
-model.add(Convolution2D(\cf7 64\cf4 , \cf7 3\cf4 , \cf7 3\cf5 ))\
-model.add(Activation(\cf6 'relu'\cf5 ))\
-\cf2 # model.add(Convolution2D(64, 3, 3))\
-# model.add(Activation('relu'))\
-\cf5 model.add(MaxPooling2D(\cf9 pool_size\cf5 =(\cf7 2\cf4 , \cf7 2\cf5 )))\
-model.add(Dropout(\cf7 0.5\cf5 ))\
-\
-model.add(Flatten())\
-model.add(Dense(\cf7 64\cf5 ))\
-model.add(Activation(\cf6 'relu'\cf5 ))\
-model.add(Dropout(\cf7 0.5\cf5 ))\
-model.add(Dense(num_classes))\
-model.add(Activation(\cf6 'softmax'\cf5 ))\
-\
-\cf2 # sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)\
-# model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=["accuracy"])\
-\cf5 model.compile(\cf9 loss\cf5 =\cf6 'categorical_crossentropy'\cf4 , \cf9 optimizer\cf5 =\cf6 'rmsprop'\cf4 , \cf9 metrics\cf5 =[\cf6 "accuracy"\cf5 ])\
-\
-\cf2 # Viewing model_configuration\
-\
-\cf5 model.summary()\
-model.get_config()\
-model.layers[\cf7 0\cf5 ].get_config()\
-model.layers[\cf7 0\cf5 ].input_shape\
-model.layers[\cf7 0\cf5 ].output_shape\
-model.layers[\cf7 0\cf5 ].get_weights()\
-np.shape(model.layers[\cf7 0\cf5 ].get_weights()[\cf7 0\cf5 ])\
-model.layers[\cf7 0\cf5 ].trainable\
-\
-\
-\cf2 # %%\
-# Training\
-\cf8 print\cf5 (X_train.shape)\
-\cf8 print\cf5 (y_train.shape)\
-\cf2 #print(np.std(img_data_scaled))\
-\cf5 hist = model.fit(X_train\cf4 , \cf5 y_train\cf4 , \cf9 batch_size\cf5 =\cf7 16\cf4 , \cf9 epochs\cf5 =num_epoch\cf4 , \cf9 verbose\cf5 =\cf7 1\cf4 , \cf9 validation_data\cf5 =(X_test\cf4 , \cf5 y_test))\
-\
-\cf2 # hist = model.fit(X_train, y_train, batch_size=32, nb_epoch=20,verbose=1, validation_split=0.2)\
-\
-# Training with callbacks\
-\cf4 from \cf5 keras \cf4 import \cf5 callbacks\
-\
-filename = \cf6 'model_train_new.csv'\
-\cf5 csv_log = callbacks.CSVLogger(filename\cf4 , \cf9 separator\cf5 =\cf6 ','\cf4 , \cf9 append\cf5 =\cf4 False\cf5 )\
-\
-early_stopping = callbacks.EarlyStopping(\cf9 monitor\cf5 =\cf6 'val_loss'\cf4 , \cf9 min_delta\cf5 =\cf7 0\cf4 , \cf9 patience\cf5 =\cf7 0\cf4 , \cf9 verbose\cf5 =\cf7 0\cf4 , \cf9 mode\cf5 =\cf6 'min'\cf5 )\
-\
-filepath = \cf6 "Best-weights-my_model-\{epoch:03d\}-\{loss:.4f\}-\{acc:.4f\}.hdf5"\
-\
-\cf5 checkpoint = callbacks.ModelCheckpoint(filepath\cf4 , \cf9 monitor\cf5 =\cf6 'val_loss'\cf4 , \cf9 verbose\cf5 =\cf7 1\cf4 , \cf9 save_best_only\cf5 =\cf4 True, \cf9 mode\cf5 =\cf6 'min'\cf5 )\
-\
-callbacks_list = [csv_log\cf4 , \cf5 early_stopping\cf4 , \cf5 checkpoint]\
-\
-hist = model.fit(X_train\cf4 , \cf5 y_train\cf4 , \cf9 batch_size\cf5 =\cf7 16\cf4 , \cf9 nb_epoch\cf5 =num_epoch\cf4 , \cf9 verbose\cf5 =\cf7 1\cf4 , \cf9 validation_data\cf5 =(X_test\cf4 , \cf5 y_test)\cf4 ,\
-                 \cf9 callbacks\cf5 =callbacks_list)\
-\
-\cf2 # visualizing losses and accuracy\
-\cf5 train_loss = hist.history[\cf6 'loss'\cf5 ]\
-val_loss = hist.history[\cf6 'val_loss'\cf5 ]\
-train_acc = hist.history[\cf6 'acc'\cf5 ]\
-val_acc = hist.history[\cf6 'val_acc'\cf5 ]\
-xc = \cf8 range\cf5 (num_epoch)\
-\
-plt.figure(\cf7 1\cf4 , \cf9 figsize\cf5 =(\cf7 7\cf4 , \cf7 5\cf5 ))\
-plt.plot(xc\cf4 , \cf5 train_loss)\
-plt.plot(xc\cf4 , \cf5 val_loss)\
-plt.xlabel(\cf6 'num of Epochs'\cf5 )\
-plt.ylabel(\cf6 'loss'\cf5 )\
-plt.title(\cf6 'train_loss vs val_loss'\cf5 )\
-plt.grid(\cf4 True\cf5 )\
-plt.legend([\cf6 'train'\cf4 , \cf6 'val'\cf5 ])\
-\cf2 # print plt.style.available # use bmh, classic,ggplot for big pictures\
-\cf5 plt.style.use([\cf6 'classic'\cf5 ])\
-\
-plt.figure(\cf7 2\cf4 , \cf9 figsize\cf5 =(\cf7 7\cf4 , \cf7 5\cf5 ))\
-plt.plot(xc\cf4 , \cf5 train_acc)\
-plt.plot(xc\cf4 , \cf5 val_acc)\
-plt.xlabel(\cf6 'num of Epochs'\cf5 )\
-plt.ylabel(\cf6 'accuracy'\cf5 )\
-plt.title(\cf6 'train_acc vs val_acc'\cf5 )\
-plt.grid(\cf4 True\cf5 )\
-plt.legend([\cf6 'train'\cf4 , \cf6 'val'\cf5 ]\cf4 , \cf9 loc\cf5 =\cf7 4\cf5 )\
-\cf2 # print plt.style.available # use bmh, classic,ggplot for big pictures\
-\cf5 plt.style.use([\cf6 'classic'\cf5 ])\
-\
-\cf2 # %%\
-\
-# Evaluating the model\
-\
-\cf5 score = model.evaluate(X_test\cf4 , \cf5 y_test\cf4 , \cf9 show_accuracy\cf5 =\cf4 True, \cf9 verbose\cf5 =\cf7 0\cf5 )\
-\cf8 print\cf5 (\cf6 'Test Loss:'\cf4 , \cf5 score[\cf7 0\cf5 ])\
-\cf8 print\cf5 (\cf6 'Test accuracy:'\cf4 , \cf5 score[\cf7 1\cf5 ])\
-\
-test_image = X_test[\cf7 0\cf5 :\cf7 1\cf5 ]\
-\cf8 print\cf5 (test_image.shape)\
-\
-\cf8 print\cf5 (model.predict(test_image))\
-\cf8 print\cf5 (model.predict_classes(test_image))\
-\cf8 print\cf5 (y_test[\cf7 0\cf5 :\cf7 1\cf5 ])\
-\
-\cf2 # Testing a new image\
-\cf5 test_image = cv2.imread(\cf6 'data/Humans/rider-8.jpg'\cf5 )\
-test_image = cv2.cvtColor(test_image\cf4 , \cf5 cv2.COLOR_BGR2GRAY)\
-test_image = cv2.resize(test_image\cf4 , \cf5 (\cf7 128\cf4 , \cf7 128\cf5 ))\
-test_image = np.array(test_image)\
-test_image = test_image.astype(\cf6 'float32'\cf5 )\
-test_image /= \cf7 255\
-\cf8 print\cf5 (test_image.shape)\
-\
-\cf4 if \cf5 num_channel == \cf7 1\cf5 :\
-    \cf4 if \cf5 K.image_data_format() == \cf6 'channels_first'\cf5 :\
-        test_image = np.expand_dims(test_image\cf4 , \cf9 axis\cf5 =\cf7 0\cf5 )\
-        test_image = np.expand_dims(test_image\cf4 , \cf9 axis\cf5 =\cf7 0\cf5 )\
-        \cf8 print\cf5 (test_image.shape)\
-    \cf4 else\cf5 :\
-        test_image = np.expand_dims(test_image\cf4 , \cf9 axis\cf5 =\cf7 3\cf5 )\
-        test_image = np.expand_dims(test_image\cf4 , \cf9 axis\cf5 =\cf7 0\cf5 )\
-        \cf8 print\cf5 (test_image.shape)\
-\
-\cf4 else\cf5 :\
-    \cf4 if \cf5 K.image_data_format() == \cf6 'channels_first'\cf5 :\
-        test_image = np.rollaxis(test_image\cf4 , \cf7 2\cf4 , \cf7 0\cf5 )\
-        test_image = np.expand_dims(test_image\cf4 , \cf9 axis\cf5 =\cf7 0\cf5 )\
-        \cf8 print\cf5 (test_image.shape)\
-    \cf4 else\cf5 :\
-        test_image = np.expand_dims(test_image\cf4 , \cf9 axis\cf5 =\cf7 0\cf5 )\
-        \cf8 print\cf5 (test_image.shape)\
-\
-\cf2 # Predicting the test image\
-\cf8 print\cf5 ((model.predict(test_image)))\
-\cf8 print\cf5 (model.predict_classes(test_image))\
-\
-\
-\cf2 # %%\
-\
-# Visualizing the intermediate layer\
-\
-#\
-\cf4 def \cf10 get_featuremaps\cf5 (model\cf4 , \cf5 layer_idx\cf4 , \cf5 X_batch):\
-    get_activations = K.function([model.layers[\cf7 0\cf5 ].input\cf4 , \cf5 K.learning_phase()]\cf4 , \cf5 [model.layers[layer_idx].output\cf4 , \cf5 ])\
-    activations = get_activations([X_batch\cf4 , \cf7 0\cf5 ])\
-    \cf4 return \cf5 activations\
-\
-\
-layer_num = \cf7 3\
-\cf5 filter_num = \cf7 0\
-\
-\cf5 activations = get_featuremaps(model\cf4 , \cf8 int\cf5 (layer_num)\cf4 , \cf5 test_image)\
-\
-\cf8 print\cf5 (np.shape(activations))\
-feature_maps = activations[\cf7 0\cf5 ][\cf7 0\cf5 ]\
-\cf8 print\cf5 (np.shape(feature_maps))\
-\
-\cf4 if \cf5 K.image_data_format() == \cf6 'channels_first'\cf5 :\
-    feature_maps = np.rollaxis((np.rollaxis(feature_maps\cf4 , \cf7 2\cf4 , \cf7 0\cf5 ))\cf4 , \cf7 2\cf4 , \cf7 0\cf5 )\
-\cf8 print\cf5 (feature_maps.shape)\
-\
-fig = plt.figure(\cf9 figsize\cf5 =(\cf7 16\cf4 , \cf7 16\cf5 ))\
-plt.imshow(feature_maps[:\cf4 , \cf5 :\cf4 , \cf5 filter_num]\cf4 , \cf9 cmap\cf5 =\cf6 'gray'\cf5 )\
-plt.savefig(\cf6 "featuremaps-layer-\{\}"\cf5 .format(layer_num) + \cf6 "-filternum-\{\}"\cf5 .format(filter_num) + \cf6 '.jpg'\cf5 )\
-\
-num_of_featuremaps = feature_maps.shape[\cf7 2\cf5 ]\
-fig = plt.figure(\cf9 figsize\cf5 =(\cf7 16\cf4 , \cf7 16\cf5 ))\
-plt.title(\cf6 "featuremaps-layer-\{\}"\cf5 .format(layer_num))\
-subplot_num = \cf8 int\cf5 (np.ceil(np.sqrt(num_of_featuremaps)))\
-\cf4 for \cf5 i \cf4 in \cf8 range\cf5 (\cf8 int\cf5 (num_of_featuremaps)):\
-    ax = fig.add_subplot(subplot_num\cf4 , \cf5 subplot_num\cf4 , \cf5 i + \cf7 1\cf5 )\
-    \cf2 # ax.imshow(output_image[0,:,:,i],interpolation='nearest' ) #to see the first filter\
-    \cf5 ax.imshow(feature_maps[:\cf4 , \cf5 :\cf4 , \cf5 i]\cf4 , \cf9 cmap\cf5 =\cf6 'gray'\cf5 )\
-    plt.xticks([])\
-    plt.yticks([])\
-    plt.tight_layout()\
-plt.show()\
-fig.savefig(\cf6 "featuremaps-layer-\{\}"\cf5 .format(layer_num) + \cf6 '.jpg'\cf5 )\
-\
-\cf2 # %%\
-# Printing the confusion matrix\
-\cf4 from \cf5 sklearn.metrics \cf4 import \cf5 classification_report\cf4 , \cf5 confusion_matrix\
-\cf4 import \cf5 itertools\
-\
-Y_pred = model.predict(X_test)\
-\cf8 print\cf5 (Y_pred)\
-y_pred = np.argmax(Y_pred\cf4 , \cf9 axis\cf5 =\cf7 1\cf5 )\
-\cf8 print\cf5 (y_pred)\
-\cf2 # y_pred = model.predict_classes(X_test)\
-# print(y_pred)\
-\cf5 target_names = [\cf6 'class 0(Back)'\cf4 , \cf6 'class 1(Front)'\cf5 ]\
-\
-\cf8 print\cf5 (classification_report(np.argmax(y_test\cf4 , \cf9 axis\cf5 =\cf7 1\cf5 )\cf4 , \cf5 y_pred\cf4 , \cf9 target_names\cf5 =target_names))\
-\
-\cf8 print\cf5 (confusion_matrix(np.argmax(y_test\cf4 , \cf9 axis\cf5 =\cf7 1\cf5 )\cf4 , \cf5 y_pred))\
-\
-\
-\cf2 # Plotting the confusion matrix\
-\cf4 def \cf10 plot_confusion_matrix\cf5 (cm\cf4 , \cf5 classes\cf4 ,\
-                          \cf5 normalize=\cf4 False,\
-                          \cf5 title=\cf6 'Confusion matrix'\cf4 ,\
-                          \cf5 cmap=plt.cm.Blues):\
-    
-\f1\i \cf11 """\
-    This function prints and plots the confusion matrix.\
-    Normalization can be applied by setting `normalize=True`.\
-    """\
-    
-\f0\i0 \cf5 plt.imshow(cm\cf4 , \cf9 interpolation\cf5 =\cf6 'nearest'\cf4 , \cf9 cmap\cf5 =cmap)\
-    plt.title(title)\
-    plt.colorbar()\
-    tick_marks = np.arange(\cf8 len\cf5 (classes))\
-    plt.xticks(tick_marks\cf4 , \cf5 classes\cf4 , \cf9 rotation\cf5 =\cf7 45\cf5 )\
-    plt.yticks(tick_marks\cf4 , \cf5 classes)\
-\
-    \cf4 if \cf5 normalize:\
-        cm = cm.astype(\cf6 'float'\cf5 ) / cm.sum(\cf9 axis\cf5 =\cf7 1\cf5 )[:\cf4 , \cf5 np.newaxis]\
-        \cf8 print\cf5 (\cf6 "Normalized confusion matrix"\cf5 )\
-    \cf4 else\cf5 :\
-        \cf8 print\cf5 (\cf6 'Confusion matrix, without normalization'\cf5 )\
-\
-    \cf8 print\cf5 (cm)\
-\
-    thresh = cm.max() / \cf7 2.\
-    \cf4 for \cf5 i\cf4 , \cf5 j \cf4 in \cf5 itertools.product(\cf8 range\cf5 (cm.shape[\cf7 0\cf5 ])\cf4 , \cf8 range\cf5 (cm.shape[\cf7 1\cf5 ])):\
-        plt.text(j\cf4 , \cf5 i\cf4 , \cf5 cm[i\cf4 , \cf5 j]\cf4 ,\
-                 \cf9 horizontalalignment\cf5 =\cf6 "center"\cf4 ,\
-                 \cf9 color\cf5 =\cf6 "white" \cf4 if \cf5 cm[i\cf4 , \cf5 j] > thresh \cf4 else \cf6 "black"\cf5 )\
-\
-    plt.tight_layout()\
-    plt.ylabel(\cf6 'True label'\cf5 )\
-    plt.xlabel(\cf6 'Predicted label'\cf5 )\
-\
-\
-\cf2 # Compute confusion matrix\
-\cf5 cnf_matrix = (confusion_matrix(np.argmax(y_test\cf4 , \cf9 axis\cf5 =\cf7 1\cf5 )\cf4 , \cf5 y_pred))\
-\
-np.set_printoptions(\cf9 precision\cf5 =\cf7 2\cf5 )\
-\
-plt.figure()\
-\
-\cf2 # Plot non-normalized confusion matrix\
-\cf5 plot_confusion_matrix(cnf_matrix\cf4 , \cf9 classes\cf5 =target_names\cf4 ,\
-                      \cf9 title\cf5 =\cf6 'Confusion matrix'\cf5 )\
-\cf2 # plt.figure()\
-# Plot normalized confusion matrix\
-# plot_confusion_matrix(cnf_matrix, classes=target_names, normalize=True,\
-#                      title='Normalized confusion matrix')\
-# plt.figure()\
-\cf5 plt.show()\
-\
-\cf2 # %%\
-# Saving and loading model and weights\
-\cf4 from \cf5 keras.models \cf4 import \cf5 model_from_json\
-\cf4 from \cf5 keras.models \cf4 import \cf5 load_model\
-\
-\cf2 # serialize model to JSON\
-\cf5 model_json = model.to_json()\
-\cf4 with \cf8 open\cf5 (\cf6 "model.json"\cf4 , \cf6 "w"\cf5 ) \cf4 as \cf5 json_file:\
-    json_file.write(model_json)\
-\cf2 # serialize weights to HDF5\
-\cf5 model.save_weights(\cf6 "model.h5"\cf5 )\
-\cf8 print\cf5 (\cf6 "Saved model to disk"\cf5 )\
-\
-\cf2 # load json and create model\
-\cf5 json_file = \cf8 open\cf5 (\cf6 'model.json'\cf4 , \cf6 'r'\cf5 )\
-loaded_model_json = json_file.read()\
-json_file.close()\
-loaded_model = model_from_json(loaded_model_json)\
-\cf2 # load weights into new model\
-\cf5 loaded_model.load_weights(\cf6 "model.h5"\cf5 )\
-\cf8 print\cf5 (\cf6 "Loaded model from disk"\cf5 )\
-\
-model.save(\cf6 'model.hdf5'\cf5 )\
-loaded_model = load_model(\cf6 'model.hdf5'\cf5 )\
-\
-}
+K.set_image_data_format('channels_first')
+from keras.utils import np_utils
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation, Flatten
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.optimizers import SGD, RMSprop, Adam
+
+# %%
+
+PATH = os.getcwd()
+# Define data path
+data_path = PATH + '/data'
+data_dir_list = os.listdir(data_path)
+data_dir_list.remove(".DS_Store")
+
+img_rows = 128
+img_cols = 128
+num_channel = 1
+num_epoch = 20
+
+# Define the number of classes
+num_classes = 2
+
+labels_name = {'Back': 0, 'Front': 1}
+
+img_data_list = []
+labels_list = []
+
+for dataset in data_dir_list:
+    img_list = os.listdir(data_path + '/' + dataset)
+    print('Loading the images of dataset-' + '{}\n'.format(dataset))
+    label = labels_name[dataset]
+    for img in img_list:
+        if img == ".DS_Store":
+            break
+        else:
+            input_img = mpimg.imread(data_path + '/' + dataset + '/' + img)
+            input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
+            input_img_resize = cv2.resize(input_img, (128, 128))
+            img_data_list.append(input_img_resize)
+            labels_list.append(label)
+
+img_data = np.array(img_data_list)
+img_data = img_data.astype('float32')
+img_data /= 255
+print(img_data.shape)
+
+labels = np.array(labels_list)
+# print the count of number of samples for different classes
+print(np.unique(labels, return_counts=True))
+# convert class labels to on-hot encoding
+Y = np_utils.to_categorical(labels, num_classes)
+
+# Shuffle the dataset
+x, y = shuffle(img_data, Y, random_state=2)
+# Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=2)
+
+if num_channel == 1:
+    if K.image_data_format() == 'channels_first':
+        img_data = np.expand_dims(img_data, axis=1)
+        print(img_data.shape)
+    else:
+        img_data = np.expand_dims(img_data, axis=4)
+        print(img_data.shape)
+
+else:
+    if K.image_data_format() == 'channels_first':
+        img_data = np.rollaxis(img_data, 3, 1)
+        print(img_data.shape)
+
+# %%
+USE_SKLEARN_PREPROCESSING = False
+
+if USE_SKLEARN_PREPROCESSING:
+    # using sklearn for preprocessing
+    from sklearn import preprocessing
+
+
+    def image_to_feature_vector(image, size=(128, 128)):
+        # resize the image to a fixed size, then flatten the image into
+        # a list of raw pixel intensities
+        return cv2.resize(image, size).flatten()
+
+
+    img_data_list = []
+    for dataset in data_dir_list:
+        img_list = os.listdir(data_path + '/' + dataset)
+        print('Loaded the images of dataset-' + '{}\n'.format(dataset))
+        for img in img_list:
+            input_img = cv2.imread(data_path + '/' + dataset + '/' + img)
+            input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
+            input_img_flatten = image_to_feature_vector(input_img, (128, 128))
+            img_data_list.append(input_img_flatten)
+
+    img_data = np.array(img_data_list)
+    img_data = img_data.astype('float32')
+    print(img_data.shape)
+    img_data_scaled = preprocessing.scale(img_data)
+    print(img_data_scaled.shape)
+
+    print(np.mean(img_data_scaled))
+    print(np.std(img_data_scaled))
+
+    print(img_data_scaled.mean(axis=0))
+    print(img_data_scaled.std(axis=0))
+
+    if K.image_data_format() == 'channels_first':
+        img_data_scaled = img_data_scaled.reshape(img_data.shape[0], num_channel, img_rows, img_cols)
+        print(img_data_scaled.shape)
+
+    else:
+        img_data_scaled = img_data_scaled.reshape(img_data.shape[0], img_rows, img_cols, num_channel)
+        print(img_data_scaled.shape)
+
+    if K.image_data_format() == 'channels_first':
+        img_data_scaled = img_data_scaled.reshape(img_data.shape[0], num_channel, img_rows, img_cols)
+        print(img_data_scaled.shape)
+
+    else:
+        img_data_scaled = img_data_scaled.reshape(img_data.shape[0], img_rows, img_cols, num_channel)
+        print(img_data_scaled.shape)
+
+if USE_SKLEARN_PREPROCESSING:
+    img_data = img_data_scaled
+
+# %%
+# Defining the model
+
+input_shape = X_train.shape
+input_shape = y_train.shape
+
+model = Sequential()
+
+model.add(Convolution2D(32, 3, 3, padding='same', input_shape=X_train.shape))
+model.add(Activation('relu'))
+model.add(Convolution2D(32, 3, 3))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
+
+model.add(Convolution2D(64, 3, 3))
+model.add(Activation('relu'))
+# model.add(Convolution2D(64, 3, 3))
+# model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
+
+model.add(Flatten())
+model.add(Dense(64))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes))
+model.add(Activation('softmax'))
+
+# sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+# model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=["accuracy"])
+model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=["accuracy"])
+
+# Viewing model_configuration
+
+model.summary()
+model.get_config()
+model.layers[0].get_config()
+model.layers[0].input_shape
+model.layers[0].output_shape
+model.layers[0].get_weights()
+np.shape(model.layers[0].get_weights()[0])
+model.layers[0].trainable
+
+
+# %%
+# Training
+print(X_train.shape)
+print(y_train.shape)
+#print(np.std(img_data_scaled))
+hist = model.fit(X_train, y_train, batch_size=16, epochs=num_epoch, verbose=1, validation_data=(X_test, y_test))
+
+# hist = model.fit(X_train, y_train, batch_size=32, nb_epoch=20,verbose=1, validation_split=0.2)
+
+# Training with callbacks
+from keras import callbacks
+
+filename = 'model_train_new.csv'
+csv_log = callbacks.CSVLogger(filename, separator=',', append=False)
+
+early_stopping = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=0, mode='min')
+
+filepath = "Best-weights-my_model-{epoch:03d}-{loss:.4f}-{acc:.4f}.hdf5"
+
+checkpoint = callbacks.ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+
+callbacks_list = [csv_log, early_stopping, checkpoint]
+
+hist = model.fit(X_train, y_train, batch_size=16, nb_epoch=num_epoch, verbose=1, validation_data=(X_test, y_test),
+                 callbacks=callbacks_list)
+
+# visualizing losses and accuracy
+train_loss = hist.history['loss']
+val_loss = hist.history['val_loss']
+train_acc = hist.history['acc']
+val_acc = hist.history['val_acc']
+xc = range(num_epoch)
+
+plt.figure(1, figsize=(7, 5))
+plt.plot(xc, train_loss)
+plt.plot(xc, val_loss)
+plt.xlabel('num of Epochs')
+plt.ylabel('loss')
+plt.title('train_loss vs val_loss')
+plt.grid(True)
+plt.legend(['train', 'val'])
+# print plt.style.available # use bmh, classic,ggplot for big pictures
+plt.style.use(['classic'])
+
+plt.figure(2, figsize=(7, 5))
+plt.plot(xc, train_acc)
+plt.plot(xc, val_acc)
+plt.xlabel('num of Epochs')
+plt.ylabel('accuracy')
+plt.title('train_acc vs val_acc')
+plt.grid(True)
+plt.legend(['train', 'val'], loc=4)
+# print plt.style.available # use bmh, classic,ggplot for big pictures
+plt.style.use(['classic'])
+
+# %%
+
+# Evaluating the model
+
+score = model.evaluate(X_test, y_test, show_accuracy=True, verbose=0)
+print('Test Loss:', score[0])
+print('Test accuracy:', score[1])
+
+test_image = X_test[0:1]
+print(test_image.shape)
+
+print(model.predict(test_image))
+print(model.predict_classes(test_image))
+print(y_test[0:1])
+
+# Testing a new image
+test_image = cv2.imread('data/Humans/rider-8.jpg')
+test_image = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+test_image = cv2.resize(test_image, (128, 128))
+test_image = np.array(test_image)
+test_image = test_image.astype('float32')
+test_image /= 255
+print(test_image.shape)
+
+if num_channel == 1:
+    if K.image_data_format() == 'channels_first':
+        test_image = np.expand_dims(test_image, axis=0)
+        test_image = np.expand_dims(test_image, axis=0)
+        print(test_image.shape)
+    else:
+        test_image = np.expand_dims(test_image, axis=3)
+        test_image = np.expand_dims(test_image, axis=0)
+        print(test_image.shape)
+
+else:
+    if K.image_data_format() == 'channels_first':
+        test_image = np.rollaxis(test_image, 2, 0)
+        test_image = np.expand_dims(test_image, axis=0)
+        print(test_image.shape)
+    else:
+        test_image = np.expand_dims(test_image, axis=0)
+        print(test_image.shape)
+
+# Predicting the test image
+print((model.predict(test_image)))
+print(model.predict_classes(test_image))
+
+
+# %%
+
+# Visualizing the intermediate layer
+
+#
+def get_featuremaps(model, layer_idx, X_batch):
+    get_activations = K.function([model.layers[0].input, K.learning_phase()], [model.layers[layer_idx].output, ])
+    activations = get_activations([X_batch, 0])
+    return activations
+
+
+layer_num = 3
+filter_num = 0
+
+activations = get_featuremaps(model, int(layer_num), test_image)
+
+print(np.shape(activations))
+feature_maps = activations[0][0]
+print(np.shape(feature_maps))
+
+if K.image_data_format() == 'channels_first':
+    feature_maps = np.rollaxis((np.rollaxis(feature_maps, 2, 0)), 2, 0)
+print(feature_maps.shape)
+
+fig = plt.figure(figsize=(16, 16))
+plt.imshow(feature_maps[:, :, filter_num], cmap='gray')
+plt.savefig("featuremaps-layer-{}".format(layer_num) + "-filternum-{}".format(filter_num) + '.jpg')
+
+num_of_featuremaps = feature_maps.shape[2]
+fig = plt.figure(figsize=(16, 16))
+plt.title("featuremaps-layer-{}".format(layer_num))
+subplot_num = int(np.ceil(np.sqrt(num_of_featuremaps)))
+for i in range(int(num_of_featuremaps)):
+    ax = fig.add_subplot(subplot_num, subplot_num, i + 1)
+    # ax.imshow(output_image[0,:,:,i],interpolation='nearest' ) #to see the first filter
+    ax.imshow(feature_maps[:, :, i], cmap='gray')
+    plt.xticks([])
+    plt.yticks([])
+    plt.tight_layout()
+plt.show()
+fig.savefig("featuremaps-layer-{}".format(layer_num) + '.jpg')
+
+# %%
+# Printing the confusion matrix
+from sklearn.metrics import classification_report, confusion_matrix
+import itertools
+
+Y_pred = model.predict(X_test)
+print(Y_pred)
+y_pred = np.argmax(Y_pred, axis=1)
+print(y_pred)
+# y_pred = model.predict_classes(X_test)
+# print(y_pred)
+target_names = ['class 0(Back)', 'class 1(Front)']
+
+print(classification_report(np.argmax(y_test, axis=1), y_pred, target_names=target_names))
+
+print(confusion_matrix(np.argmax(y_test, axis=1), y_pred))
+
+
+# Plotting the confusion matrix
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+
+# Compute confusion matrix
+cnf_matrix = (confusion_matrix(np.argmax(y_test, axis=1), y_pred))
+
+np.set_printoptions(precision=2)
+
+plt.figure()
+
+# Plot non-normalized confusion matrix
+plot_confusion_matrix(cnf_matrix, classes=target_names,
+                      title='Confusion matrix')
+# plt.figure()
+# Plot normalized confusion matrix
+# plot_confusion_matrix(cnf_matrix, classes=target_names, normalize=True,
+#                      title='Normalized confusion matrix')
+# plt.figure()
+plt.show()
+
+# %%
+# Saving and loading model and weights
+from keras.models import model_from_json
+from keras.models import load_model
+
+# serialize model to JSON
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("model.h5")
+print("Saved model to disk")
+
+# load json and create model
+json_file = open('model.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+loaded_model = model_from_json(loaded_model_json)
+# load weights into new model
+loaded_model.load_weights("model.h5")
+print("Loaded model from disk")
+
+model.save('model.hdf5')
+loaded_model = load_model('model.hdf5')
